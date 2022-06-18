@@ -37,18 +37,30 @@ public class flal {
 
   public static void main(String... args) {
     try {
-      String rootPath= Thread.currentThread(
-          ).getContextClassLoader().getResource("").getPath();
-      String propsPath = rootPath + "flal.properties";
-      Properties appProps = new Properties();
-      appProps.load(new FileInputStream(propsPath));
+      File configFile = null;
 
-      if (appProps.containsKey("outputDir")) {
-        outputDir = appProps.getProperty("outputDir");
+      String userDir = System. getProperty("user.home");
+      configFile = new File(userDir + "/." + Constants.configFilename);
+      if (configFile.exists() == false) {
+        String rootPath= Thread.currentThread(
+            ).getContextClassLoader().getResource("").getPath();
+        configFile = new File(rootPath + "/" + Constants.configFilename);
+        if (configFile.exists() == false) {
+          configFile = null;
+        }
       }
 
-      if (appProps.containsKey("rootDir")) {
-        rootDir = appProps.getProperty("rootDir");
+      if (configFile != null) {
+        Properties appProps = new Properties();
+        appProps.load(new FileInputStream(configFile));
+
+        if (appProps.containsKey("outputDir")) {
+          outputDir = appProps.getProperty("outputDir");
+        }
+
+        if (appProps.containsKey("rootDir")) {
+          rootDir = appProps.getProperty("rootDir");
+        }
       }
 
       File root = new File(rootDir);
