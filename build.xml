@@ -55,6 +55,9 @@
       destdir="build/classes"
       classpathref="classpath"
       includeantruntime="false"/>
+
+    <copy file="src/flal.properties" todir="build/classes"/>
+
   </target>
 
 </project>

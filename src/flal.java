@@ -1,9 +1,11 @@
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -19,14 +21,9 @@ import org.jaudiotagger.tag.FieldKey;
 
 public class flal {
 
-  private static boolean dummyProcessing
-    = false;
-
-  public static final String outputDir
-    = "";
-
-  public static final String rootDir
-    = "";
+  private static boolean dummyProcessing = false;
+  public static String outputDir = "output";
+  public static String rootDir = ".";
 
   private static FileFilter flacFileFilter
     = new FileFilter() {
@@ -40,12 +37,26 @@ public class flal {
 
   public static void main(String... args) {
     try {
+      String rootPath= Thread.currentThread(
+          ).getContextClassLoader().getResource("").getPath();
+      String propsPath = rootPath + "flal.properties";
+      Properties appProps = new Properties();
+      appProps.load(new FileInputStream(propsPath));
+
+      if (appProps.containsKey("outputDir")) {
+        outputDir = appProps.getProperty("outputDir");
+      }
+
+      if (appProps.containsKey("rootDir")) {
+        rootDir = appProps.getProperty("rootDir");
+      }
+
       File root = new File(rootDir);
       if (root.isDirectory()) {
-	processFlalDirectory(root);
+        processFlalDirectory(root);
       }
       else {
-	System.out.println("root is not a directory.");
+        System.out.println("root is not a directory.");
       }
     }
     catch (Exception e) {
