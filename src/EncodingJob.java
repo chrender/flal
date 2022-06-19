@@ -40,6 +40,7 @@ public class EncodingJob {
   private File outputFile;
   private boolean overwriteExisting = false;
   private boolean dummyProcessing = false;
+  private Logger logger = null;
 
 
   /**
@@ -49,22 +50,23 @@ public class EncodingJob {
    *          the supplied list's order.
    * @param outputFile File to write to. 
    */
-  public EncodingJob(List<File> sourceFiles, File outputFile) {
+  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile) {
+    this.logger = logger;
     this.sourceFiles = sourceFiles;
     this.outputFile = outputFile;
   }
 
 
-  public EncodingJob(List<File> sourceFiles, File outputFile,
+  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile,
       boolean overwriteExisting) {
-    this(sourceFiles, outputFile);
+    this(logger, sourceFiles, outputFile);
     this.overwriteExisting = overwriteExisting;
   }
 
 
-  public EncodingJob(List<File> sourceFiles, File outputFile,
+  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile,
       boolean overwriteExisting, boolean dummyProcessing) {
-    this(sourceFiles, outputFile, overwriteExisting);
+    this(logger, sourceFiles, outputFile, overwriteExisting);
     this.dummyProcessing = dummyProcessing;
   }
 
@@ -166,7 +168,7 @@ public class EncodingJob {
 	  f = AudioFileIO.read(sourceFile);
 	  header = f.getAudioHeader();
 	  int trackLength = header.getTrackLength();
-	  System.out.println((sourceIndex+1) + "/" + sourceFiles.size() + ": "
+	  logger.log((sourceIndex+1) + "/" + sourceFiles.size() + ": "
               + sourceFile.getAbsolutePath() + "[" + trackLength + "]");
 
 	  Process inProc = new ProcessBuilder(
@@ -194,7 +196,7 @@ public class EncodingJob {
 	  is.close();
 	  int inExit = inProc.waitFor();
 	  if (inExit != 0) {
-	    System.out.println("inexitcode:" + inExit);
+	    logger.log("inexitcode:" + inExit);
 	  }
 	}
 	os.close();
@@ -202,7 +204,7 @@ public class EncodingJob {
 	oer.close();
 	int outExit = process.waitFor();
 	if (outExit != 0) {
-	  System.out.println("outexitcode:" + outExit);
+	  logger.log("outexitcode:" + outExit);
 	}
 
 	f = AudioFileIO.read(tmpOutputFile);
@@ -215,20 +217,21 @@ public class EncodingJob {
           StandardCopyOption.REPLACE_EXISTING);
     }
     else {
-      System.out.println("Existing is newer.");
+      logger.log("Existing is newer.");
     }
   }
 
 
   public void dumpStream(
       String prefix, InputStreamReader er) throws Exception {
+    StringBuffer output = new StringBuffer();
     boolean atLineStart = true;
     if (er.ready()) {
       do {
 	int erData = er.read();
 	if (erData != -1) {
 	  if (atLineStart) {
-	    System.out.print("[" + prefix + "] ");
+	    output.append("[" + prefix + "] ");
 	    atLineStart = false;
 	  }
 	  char theChar = (char) erData;
@@ -238,11 +241,12 @@ public class EncodingJob {
 	  if (theChar == '\n') {
 	    atLineStart = true;
 	  }
-	  System.out.print(theChar);
+	  output.append(theChar);
 	}
       }
       while (er.ready());
-      System.out.println("");
+      logger.log(output.toString());
+      output = new StringBuffer();
     }
   }
 }

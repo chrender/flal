@@ -24,6 +24,9 @@ public class flal {
   private static boolean dummyProcessing = false;
   public static String outputDir = "output";
   public static String rootDir = ".";
+  public static String logDir = null;
+  public static Logger logger = null;
+
 
   private static FileFilter flacFileFilter
     = new FileFilter() {
@@ -34,6 +37,7 @@ public class flal {
             Constants.FLAC_SUFFIX.toLowerCase()));
       }
     };
+
 
   public static void main(String... args) {
     try {
@@ -61,20 +65,27 @@ public class flal {
         if (appProps.containsKey("rootDir")) {
           rootDir = appProps.getProperty("rootDir");
         }
+
+        if (appProps.containsKey("logDir")) {
+          logDir = appProps.getProperty("logDir");
+        }
       }
+
+      logger = new Logger(logDir);
 
       File root = new File(rootDir);
       if (root.isDirectory()) {
         processFlalDirectory(root);
       }
       else {
-        System.out.println("root is not a directory.");
+        logger.log("root is not a directory.");
       }
     }
     catch (Exception e) {
       e.printStackTrace();
     }
   }
+
 
   public static boolean processFlalDirectory(File dir) throws Exception {
     File[] files = dir.listFiles(flacFileFilter);
@@ -87,40 +98,42 @@ public class flal {
         }
       }
       else {
-        if (!file.getName().startsWith(".")
-            && file.getName().endsWith("flac")) {
-          AudioFile f = AudioFileIO.read(file);
-          Tag tag = f.getTag();
-          String album = tag.getFirst(FieldKey.ALBUM);
-          String genre = tag.getFirst(FieldKey.GENRE).toLowerCase();
-          String concat = getAndVerifyConcat(tag);
-          if ((Constants.audioGroupGenres.contains(genre))
-              && (!concat.equals(Constants.CONCAT_FALSE))) {
-            // audio group
-            boolean parentDirBelongsToGroup = processAudioGroup(dir);
-            return parentDirBelongsToGroup;
-              }
-          else {
-            // single file
-            String outputFilename
-              = outputDir + "/" 
-              + file.getParentFile().getAbsolutePath().substring(
-                  rootDir.length()+1)
-              + "/"
-              + file.getName().substring(0,
-                  file.getName().length()
-                  - Constants.FLAC_SUFFIX.length() - 1) + ".m4a";
-            EncodingJob job = new EncodingJob(
-                Arrays.asList(file),
-                new File(outputFilename));
-            job.run();
-
-          }
-            }		
+        String relativePath = file.getParentFile().getAbsolutePath().substring(
+            rootDir.length()+1);
+        logger.log(
+            "Processing \"" + relativePath + "/" + file.getName() + "\".");
+        AudioFile f = AudioFileIO.read(file);
+        Tag tag = f.getTag();
+        String album = tag.getFirst(FieldKey.ALBUM);
+        String genre = tag.getFirst(FieldKey.GENRE).toLowerCase();
+        String concat = getAndVerifyConcat(tag);
+        if ((Constants.audioGroupGenres.contains(genre))
+            && (!concat.equals(Constants.CONCAT_FALSE))) {
+          // audio group
+          boolean parentDirBelongsToGroup = processAudioGroup(dir);
+          return parentDirBelongsToGroup;
+            }
+        else {
+          // single file
+          String outputFilename
+            = outputDir + "/"
+            + file.getParentFile().getAbsolutePath().substring(
+                rootDir.length()+1)
+            + "/"
+            + file.getName().substring(0,
+                file.getName().length()
+                - Constants.FLAC_SUFFIX.length() - 1) + ".m4a";
+          EncodingJob job = new EncodingJob(
+              logger,
+              Arrays.asList(file),
+              new File(outputFilename));
+          job.run();
+        }
       }
     }
     return false;
   }
+
 
   public static boolean processAudioGroup(File dir) throws Exception {
     String groupType;
@@ -170,7 +183,7 @@ public class flal {
       + "/" + groupRootDir.getName() + ".m4a";
     File outputFile = new File(outputFilename);
 
-    EncodingJob job = new EncodingJob(sourceFiles, outputFile);
+    EncodingJob job = new EncodingJob(logger, sourceFiles, outputFile);
     job.run();
 
     return myDiscTotal > 1;
