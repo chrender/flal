@@ -17,7 +17,7 @@ import org.jaudiotagger.tag.FieldKey;
 
 
 
-// "AudioGroup" is used to denote either Audiobook or Audiotheathre.
+// "AudioGroup" is used to denote either Audiobook or Audiotheatre.
 
 public class flal {
 
@@ -26,6 +26,7 @@ public class flal {
   public static String rootDir = ".";
   public static String logDir = null;
   public static Logger logger = null;
+  public static int nofEncodingJobsCreated = 0;
 
 
   private static FileFilter flacFileFilter
@@ -110,6 +111,8 @@ public class flal {
         if ((Constants.audioGroupGenres.contains(genre))
             && (!concat.equals(Constants.CONCAT_FALSE))) {
           // audio group
+          logger.log("Detected group, genre: \"" + genre + "\", concat: \""
+              + concat + "\".");
           boolean parentDirBelongsToGroup = processAudioGroup(dir);
           return parentDirBelongsToGroup;
             }
@@ -125,6 +128,8 @@ public class flal {
                 - Constants.FLAC_SUFFIX.length() - 1) + ".m4a";
           EncodingJob job = new EncodingJob(
               logger,
+              getNextEncodingJobName(),
+              rootDir,
               Arrays.asList(file),
               new File(outputFilename));
           job.run();
@@ -145,25 +150,25 @@ public class flal {
     File file = files[0];
     AudioFile f = AudioFileIO.read(file);
     Tag tag = f.getTag();
-    String genre = tag.getFirst(FieldKey.GENRE);
+    String genre = tag.getFirst(FieldKey.GENRE).toLowerCase();
     String discTotalAsString = tag.getFirst(FieldKey.DISC_TOTAL);
     myConcat = getAndVerifyConcat(tag);
 
     myDiscTotal = (discTotalAsString == null || discTotalAsString.isEmpty()
-		    ? 1 : Integer.parseInt(discTotalAsString));
-    if (genre.equals("Audiobook") || genre.equals("Audiotheathre")) {
-	    groupType = genre;
+        ? 1 : Integer.parseInt(discTotalAsString));
+    if (Constants.audioGroupGenres.contains(genre)) {
+      groupType = genre;
     }
     else {
       throw new Exception("Invalid group type.");
     }
 
-    File groupRootDir = (myDiscTotal > 1 ? dir.getParentFile() : dir);
+    boolean isMultiDirGroup
+      = myDiscTotal > 1 && !myConcat.equals(Constants.CONCAT_DIRONLY);
+    File groupRootDir = isMultiDirGroup ? dir.getParentFile() : dir;
     String relativeGroupRoot
-      = groupRootDir.getAbsolutePath().substring(
-                rootDir.length()+1,
-                (int)(groupRootDir.getAbsolutePath().length()
-                  - groupRootDir.getName().length()));
+      = groupRootDir.getAbsolutePath().substring(rootDir.length()+1);
+    logger.log("Group root directory: \"" + relativeGroupRoot + "\".");
 
     List<File> sourceFiles = new ArrayList<File>();
     File[] rootFiles = groupRootDir.listFiles(flacFileFilter);
@@ -179,14 +184,18 @@ public class flal {
       }
     }
 
-    String outputFilename = outputDir + "/" + relativeGroupRoot
-      + "/" + groupRootDir.getName() + ".m4a";
+    String outputFilename = outputDir + "/" + relativeGroupRoot + ".m4a";
     File outputFile = new File(outputFilename);
 
-    EncodingJob job = new EncodingJob(logger, sourceFiles, outputFile);
+    EncodingJob job = new EncodingJob(
+        logger,
+        getNextEncodingJobName(),
+        rootDir,
+        sourceFiles,
+        outputFile);
     job.run();
 
-    return myDiscTotal > 1;
+    return isMultiDirGroup;
   }
 
 
@@ -206,6 +215,12 @@ public class flal {
         throw new Exception("Invalid concat type.");
       }
     }
+  }
+
+
+  public static String getNextEncodingJobName() {
+    nofEncodingJobsCreated++;
+    return "job" + nofEncodingJobsCreated;
   }
 }
 
