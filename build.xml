@@ -50,14 +50,17 @@
 
   <target name="compile">
     <mkdir dir="build/classes"/>
-    <javac
-      srcdir="src" 
-      destdir="build/classes"
-      classpathref="classpath"
-      includeantruntime="false"/>
-
+    <javac srcdir="src" destdir="build/classes"
+    classpathref="classpath" includeantruntime="false" debug="true">
+     <compilerarg value="-Xlint:unchecked" />
+    </javac>
     <copy file="src/flal.properties" todir="build/classes"/>
+  </target>
 
+  <target name="run">
+    <java fork="false" classname="flal" classpathref="classpath">
+      <classpath path="build/classes"/>
+    </java>
   </target>
 
 </project>
