@@ -12,7 +12,7 @@ public class Constants {
   public static final String CONCAT_ALLDISCS = "all-discs";
 
   public static final List<String> audioGroupGenres
-    = Arrays.asList("audiobook", "audiotheathre");
+    = Arrays.asList("audiobook", "audio theatre");
 
   public static final String configFilename = "flal.properties";
 }

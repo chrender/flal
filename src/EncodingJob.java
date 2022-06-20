@@ -35,7 +35,8 @@ import org.jaudiotagger.tag.TagField;
 public class EncodingJob {
 
   private static final Pattern encPattern = Pattern.compile("FLAC (.*) bits");
-
+  private String jobName;
+  private String rootDir;
   private List<File> sourceFiles;
   private File outputFile;
   private boolean overwriteExisting = false;
@@ -46,27 +47,32 @@ public class EncodingJob {
   /**
    * Creates a new encoding job.
    *
+   * @param logger Logger to write encoder job's output to.
    * @param sourceFiles List of source files. Files are processed in
    *          the supplied list's order.
    * @param outputFile File to write to. 
    */
-  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile) {
+  public EncodingJob(Logger logger, String jobName, String rootDir,
+      List<File> sourceFiles, File outputFile) {
     this.logger = logger;
+    this.jobName = jobName;
+    this.rootDir = rootDir;
     this.sourceFiles = sourceFiles;
     this.outputFile = outputFile;
   }
 
 
-  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile,
-      boolean overwriteExisting) {
-    this(logger, sourceFiles, outputFile);
+  public EncodingJob(Logger logger, String jobName, String rootDir,
+      List<File> sourceFiles, File outputFile, boolean overwriteExisting) {
+    this(logger, jobName, rootDir, sourceFiles, outputFile);
     this.overwriteExisting = overwriteExisting;
   }
 
 
-  public EncodingJob(Logger logger, List<File> sourceFiles, File outputFile,
-      boolean overwriteExisting, boolean dummyProcessing) {
-    this(logger, sourceFiles, outputFile, overwriteExisting);
+  public EncodingJob(Logger logger, String jobName, String rootDir,
+      List<File> sourceFiles, File outputFile, boolean overwriteExisting,
+      boolean dummyProcessing) {
+    this(logger, jobName, rootDir, sourceFiles, outputFile, overwriteExisting);
     this.dummyProcessing = dummyProcessing;
   }
 
@@ -151,7 +157,8 @@ public class EncodingJob {
                 }));
 
           if (isCompilation) {
-            parameters.add("--tag cpil:1");
+            parameters.addAll(Arrays.asList( new String[]
+                  { "--tag", "cpil:1" }));
           }
         }
 
@@ -166,10 +173,16 @@ public class EncodingJob {
 	for (int sourceIndex=0; sourceIndex<sourceFiles.size(); sourceIndex++) {
 	  File sourceFile = sourceFiles.get(sourceIndex);
 	  f = AudioFileIO.read(sourceFile);
-	  header = f.getAudioHeader();
-	  int trackLength = header.getTrackLength();
-	  logger.log((sourceIndex+1) + "/" + sourceFiles.size() + ": "
-              + sourceFile.getAbsolutePath() + "[" + trackLength + "]");
+          header = f.getAudioHeader();
+          int trackLength = header.getTrackLength();
+          String relativePath = sourceFile.getParentFile().getAbsolutePath(
+              ).substring(rootDir.length()+1);
+          int minutes = trackLength / 60;
+          int seconds = trackLength - (minutes * 60);
+          logMessage((sourceIndex+1) + "/" + sourceFiles.size() + ": "
+              + relativePath + "/" + sourceFile.getName()
+              + " [" + minutes + ":" + (seconds < 10 ? "0" : "")
+              + seconds + "]");
 
 	  Process inProc = new ProcessBuilder(
               "flac",
@@ -196,7 +209,7 @@ public class EncodingJob {
 	  is.close();
 	  int inExit = inProc.waitFor();
 	  if (inExit != 0) {
-	    logger.log("inexitcode:" + inExit);
+	    logMessage("inexitcode:" + inExit);
 	  }
 	}
 	os.close();
@@ -204,7 +217,7 @@ public class EncodingJob {
 	oer.close();
 	int outExit = process.waitFor();
 	if (outExit != 0) {
-	  logger.log("outexitcode:" + outExit);
+	  logMessage("outexitcode:" + outExit);
 	}
 
 	f = AudioFileIO.read(tmpOutputFile);
@@ -217,7 +230,7 @@ public class EncodingJob {
           StandardCopyOption.REPLACE_EXISTING);
     }
     else {
-      logger.log("Existing is newer.");
+      logMessage("Existing is newer.");
     }
   }
 
@@ -245,9 +258,14 @@ public class EncodingJob {
 	}
       }
       while (er.ready());
-      logger.log(output.toString());
+      logMessage(output.toString());
       output = new StringBuffer();
     }
+  }
+
+
+  public void logMessage(String message) {
+    logger.log(message, jobName);
   }
 }
 

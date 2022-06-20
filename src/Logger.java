@@ -27,7 +27,11 @@ public class Logger {
   }
 
   public void log(String message) {
-    System.out.println("[" + getTimestamp() + "] " + message);
+    log(message, null);
+  }
+
+  public void log(String message, String jobName) {
+    System.out.println("[" + getTimestamp() + (jobName != null ? "|" + jobName : "") + "] " + message);
   }
 
 
