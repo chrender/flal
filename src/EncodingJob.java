@@ -143,18 +143,26 @@ public class EncodingJob {
               }));
 
         if (sourceFiles.size() == 1) {
-          int trackNumber = Integer.parseInt(tag.getFirst(FieldKey.TRACK));
-          int trackTotal = Integer.parseInt(tag.getFirst(FieldKey.TRACK_TOTAL));
-          int discNumber = Integer.parseInt(tag.getFirst(FieldKey.DISC_NO));
-          int discTotal = Integer.parseInt(tag.getFirst(FieldKey.DISC_TOTAL));
-          String isCompilationAsString = tag.getFirst(FieldKey.IS_COMPILATION);
-          boolean isCompilation= (isCompilationAsString != null
-                 && isCompilationAsString.equals("1"));
+          String trackNumber = getTagOrEmpty(tag, FieldKey.TRACK);
+          String trackTotal = getTagOrEmpty(tag, FieldKey.TRACK_TOTAL);
+          String discNumber = getTagOrEmpty(tag, FieldKey.DISC_NO);
+          String discTotal = getTagOrEmpty(tag, FieldKey.DISC_TOTAL);
+          String isCompilationAsString = getTagOrEmpty(tag,
+              FieldKey.IS_COMPILATION);
 
+          boolean isCompilation
+            = (isCompilationAsString != null
+                && isCompilationAsString.equals("1"));
+
+          if (!trackNumber.isEmpty() || !trackTotal.isEmpty()) {
           parameters.addAll(Arrays.asList( new String[]
-                { "--track", trackNumber + "/" + trackTotal,
-                  "--disk", discNumber + "/" + discTotal
-                }));
+                { "--track", trackNumber + "/" + trackTotal }));
+          }
+
+          if (!discNumber.isEmpty() || !discTotal.isEmpty()) {
+            parameters.addAll(Arrays.asList( new String[]
+                  { "--disk", discNumber + "/" + discTotal }));
+          }
 
           if (isCompilation) {
             parameters.addAll(Arrays.asList( new String[]
@@ -264,8 +272,14 @@ public class EncodingJob {
   }
 
 
-  public void logMessage(String message) {
+  private void logMessage(String message) {
     logger.log(message, jobName);
+  }
+
+
+  private String getTagOrEmpty(Tag tag, FieldKey fieldKey) {
+    String result = tag.getFirst(fieldKey);
+    return result == null ? "" : result;
   }
 }
 
