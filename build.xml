@@ -53,6 +53,7 @@
     <javac srcdir="src" destdir="build/classes"
     classpathref="classpath" includeantruntime="false" debug="true">
      <compilerarg value="-Xlint:unchecked" />
+     <compilerarg value="-Xlint:deprecation" />
     </javac>
     <copy file="src/flal.properties" todir="build/classes"/>
   </target>
