@@ -33,17 +33,5 @@ public class Logger {
   public void log(String message, String jobName) {
     System.out.println("[" + getTimestamp() + (jobName != null ? "|" + jobName : "") + "] " + message);
   }
-
-
-  @Override
-  public void finalize() {
-    try {
-      if (outputStream != null) {
-        outputStream.close();
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
 }
 
