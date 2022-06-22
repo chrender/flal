@@ -10,9 +10,11 @@ All this is a conversion from an older ruby script and currently in experimental
 
 The following external programs are required:
 
-- The `flac` binary from [xiph.org's original flac implementation](https://xiph.org/flac/documentation_tools_metaflac.html). While flal uses jaudiotagger for reading and writing tags, `flac` is required for decoding of flac files.
+- The `flac` binary from [xiph.org's original flac implementation](https://xiph.org/flac/documentation_tools_flac.html). While flal uses jaudiotagger for reading and writing tags, `flac` is required for decoding of flac files.
 
-- The `fdkaac` commandline encoder frontend for `libfdk-aac` from [nu774/fdkaac](https://github.com/nu774/fdkaac) for encoding AAC audio files.
+The following binaries are optional:
+
+- The `fdkaac` commandline encoder frontend for `libfdk-aac` from [nu774/fdkaac](https://github.com/nu774/fdkaac) for encoding AAC audio files. This is required for AAC output into `.m4a` files.
 
 
 ---
