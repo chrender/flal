@@ -28,6 +28,13 @@ public class flal {
   public static Logger logger = null;
   public static int nofEncodingJobsCreated = 0;
 
+  public static String[] fdkaacFlagsMusic
+    = new String[] { "-p", "2", "-m", "5" };
+  public static String[] fdkaacFlagsAudiobook
+    = new String[] { "-p", "2", "-m", "5" };
+  public static String[] fdkaacFlagsAudiotheatre
+    = new String[] { "-p", "2", "-m", "5" };
+
 
   private static FileFilter flacFileFilter
     = new FileFilter() {
@@ -115,17 +122,18 @@ public class flal {
               + concat + "\".");
           boolean parentDirBelongsToGroup = processAudioGroup(dir);
           return parentDirBelongsToGroup;
-            }
+        }
         else {
           // single file
           String outputFilename
-            = outputDir + "/"
+            = outputDir
+            + "/"
             + file.getParentFile().getAbsolutePath().substring(
                 rootDir.length()+1)
             + "/"
             + file.getName().substring(0,
                 file.getName().length()
-                - Constants.FLAC_SUFFIX.length() - 1) + ".m4a";
+                - Constants.FLAC_SUFFIX.length()) + ".m4a";
           EncodingJob job = new EncodingJob(
               logger,
               getNextEncodingJobName(),
@@ -140,6 +148,13 @@ public class flal {
   }
 
 
+  /**
+   * Processes the supplied audio group.
+   *
+   * @param dir One of the directories containing one of the group's files.
+   * @returns Whether the supplied dir's parent directory belongs to the
+   *  group, which is the case when the group consists of multiple directories.
+   */
   public static boolean processAudioGroup(File dir) throws Exception {
     String groupType;
     int myDiscTotal;

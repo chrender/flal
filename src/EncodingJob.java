@@ -32,6 +32,14 @@ import org.jaudiotagger.tag.TagField;
 // check if they all actually belong to this group, e.g. no music files
 // in a directory which has several DISCTOTAL>1 subdirs.
 
+// TODO: Implement lame/mp3.
+
+// TODO: Implement afconvert.
+
+// TODO: Implement <targetFile.suffix>.lock for parallel processing.
+
+
+
 public class EncodingJob {
 
   private static final Pattern encPattern = Pattern.compile("FLAC (.*) bits");
@@ -39,6 +47,7 @@ public class EncodingJob {
   private String rootDir;
   private List<File> sourceFiles;
   private File outputFile;
+  private String[] encoderParameters = Constants.fdkaacEncoderDefaults;
   private boolean overwriteExisting = false;
   private boolean dummyProcessing = false;
   private Logger logger = null;
@@ -63,16 +72,25 @@ public class EncodingJob {
 
 
   public EncodingJob(Logger logger, String jobName, String rootDir,
-      List<File> sourceFiles, File outputFile, boolean overwriteExisting) {
+      List<File> sourceFiles, File outputFile, String[] encoderParameters) {
     this(logger, jobName, rootDir, sourceFiles, outputFile);
+    this.encoderParameters = encoderParameters;
+  }
+
+
+  public EncodingJob(Logger logger, String jobName, String rootDir,
+      List<File> sourceFiles, File outputFile, String[] encoderParameters,
+      boolean overwriteExisting) {
+    this(logger, jobName, rootDir, sourceFiles, outputFile, encoderParameters);
     this.overwriteExisting = overwriteExisting;
   }
 
 
   public EncodingJob(Logger logger, String jobName, String rootDir,
-      List<File> sourceFiles, File outputFile, boolean overwriteExisting,
-      boolean dummyProcessing) {
-    this(logger, jobName, rootDir, sourceFiles, outputFile, overwriteExisting);
+      List<File> sourceFiles, File outputFile, String[] encoderParameters,
+      boolean overwriteExisting, boolean dummyProcessing) {
+    this(logger, jobName, rootDir, sourceFiles, outputFile,
+       encoderParameters, overwriteExisting);
     this.dummyProcessing = dummyProcessing;
   }
 
@@ -84,6 +102,7 @@ public class EncodingJob {
     AudioHeader header = f.getAudioHeader();
 
     String album = tag.getFirst(FieldKey.ALBUM);
+    String title = sourceFiles.size()>1 ? album : tag.getFirst(FieldKey.TITLE);
     String artist = tag.getFirst(FieldKey.ARTIST);
     String genre = tag.getFirst(FieldKey.GENRE);
     String composer = tag.getFirst(FieldKey.COMPOSER);
@@ -132,15 +151,37 @@ public class EncodingJob {
                 "--raw-channels", Integer.toString(channels),
                 "--raw-rate", Integer.toString(sampleRate),
                 "--raw-format" , "S"+bits+"L",
-                "-p", "5",
-                "-m", "1",
-                "--title", album,
-                "--artist", artist,
-                "--album", album,
-                "--composer", composer,
-                "--genre", genre,
                 "-o", tmpOutputFile.getAbsolutePath()
               }));
+
+        if (title != null && title.length()>1) {
+          parameters.add("--title");
+          parameters.add(title);
+        }
+
+        if (artist != null && artist.length()>1) {
+          parameters.add("--artist");
+          parameters.add(artist);
+        }
+
+        if (album != null && album.length()>1) {
+          parameters.add("--album");
+          parameters.add(album);
+        }
+
+        if (composer != null && composer.length()>1) {
+          parameters.add("--composer");
+          parameters.add(composer);
+        }
+
+        if (genre != null && genre.length()>1) {
+          parameters.add("--genre");
+          parameters.add(genre);
+        }
+
+        if (this.encoderParameters != null) {
+          parameters.addAll(Arrays.asList(this.encoderParameters));
+        }
 
         if (sourceFiles.size() == 1) {
           String trackNumber = getTagOrEmpty(tag, FieldKey.TRACK);

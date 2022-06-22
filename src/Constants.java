@@ -15,5 +15,8 @@ public class Constants {
     = Arrays.asList("audiobook", "audio theatre");
 
   public static final String configFilename = "flal.properties";
+
+  public static final String[] fdkaacEncoderDefaults
+    = new String[] { "-p", "2", "-m", "5" };
 }
 
