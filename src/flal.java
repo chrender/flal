@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jaudiotagger.audio.AudioFile;
@@ -27,6 +28,8 @@ public class flal {
   public static String logDir = null;
   public static Logger logger = null;
   public static int nofEncodingJobsCreated = 0;
+  public static String aacEncoder = "fdkaac";
+  public static boolean debugFlag = false;
 
   public static String[] fdkaacFlagsMusic
     = new String[] { "-p", "2", "-m", "5" };
@@ -76,6 +79,18 @@ public class flal {
 
         if (appProps.containsKey("logDir")) {
           logDir = appProps.getProperty("logDir");
+        }
+
+        if (appProps.containsKey("debug")) {
+          debugFlag = appProps.getProperty("debug").equals("true");
+        }
+
+        if (appProps.containsKey("aacEncoder")) {
+          aacEncoder = appProps.getProperty("aacEncoder");
+          if (!aacEncoder.equals("fdkaac")
+              && !aacEncoder.equals("afconvert")) {
+            throw new Exception("Invalid aac encoder: \"" + aacEncoder + "\".");
+          }
         }
       }
 
@@ -135,11 +150,14 @@ public class flal {
                 file.getName().length()
                 - Constants.FLAC_SUFFIX.length()) + ".m4a";
           EncodingJob job = new EncodingJob(
-              logger,
-              getNextEncodingJobName(),
-              rootDir,
-              Arrays.asList(file),
-              new File(outputFilename));
+              Map.of(
+                "logger", logger,
+                "jobName", getNextEncodingJobName(),
+                "rootDir", rootDir,
+                "sourceFiles", Arrays.asList(file),
+                "outputFile", new File(outputFilename),
+                "encoderName", aacEncoder,
+                "debugFlag", debugFlag));
           job.run();
         }
       }
@@ -203,11 +221,14 @@ public class flal {
     File outputFile = new File(outputFilename);
 
     EncodingJob job = new EncodingJob(
-        logger,
-        getNextEncodingJobName(),
-        rootDir,
-        sourceFiles,
-        outputFile);
+        Map.of(
+          "logger", logger,
+          "jobName", getNextEncodingJobName(),
+          "rootDir", rootDir,
+          "sourceFiles", sourceFiles,
+          "outputFile", outputFile,
+          "encoderName", aacEncoder,
+          "debugFlag", debugFlag));
     job.run();
 
     return isMultiDirGroup;
