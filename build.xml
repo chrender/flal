@@ -59,7 +59,7 @@
   </target>
 
   <target name="run">
-    <java fork="false" classname="flal" classpathref="classpath">
+    <java fork="true" classname="flal" classpathref="classpath">
       <classpath path="build/classes"/>
     </java>
   </target>
