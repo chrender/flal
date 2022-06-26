@@ -27,7 +27,7 @@ import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagField;
 
-import de.christoph_ender.audio.WavFileOutputStream;
+import de.christoph_ender.audio.RF64FileOutputStream;
 
 
 
@@ -249,9 +249,8 @@ public class EncodingJob {
         else if (encoderName.equals("afconvert")) {
           outProc = null;
           tmpWavFile = File.createTempFile(outputFile.getName() + "-", ".wav");
-          //tmpWavFile.deleteOnExit();
-          os = new WavFileOutputStream(tmpWavFile,
-              WavFileOutputStream.mode.DONT_IGNORE_MAX_SIZE,
+          tmpWavFile.deleteOnExit();
+          os = new RF64FileOutputStream(tmpWavFile,
               bits, channels, sampleRate);
           logMessage(tmpWavFile.getAbsolutePath());
           oer = null;
@@ -349,7 +348,7 @@ public class EncodingJob {
           if (outExit != 0) {
             logMessage("outexitcode:" + outExit);
           }
-          //tmpWavFile.delete();
+          tmpWavFile.delete();
         }
 
         f = AudioFileIO.read(tmpOutputFile);
