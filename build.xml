@@ -54,6 +54,7 @@
     classpathref="classpath" includeantruntime="false" debug="true">
      <compilerarg value="-Xlint:unchecked" />
      <compilerarg value="-Xlint:deprecation" />
+     <compilerarg value="-Xdiags:verbose" />
     </javac>
     <copy file="src/flal.properties" todir="build/classes"/>
   </target>

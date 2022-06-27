@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.jaudiotagger.audio.AudioFile;
@@ -31,14 +32,19 @@ public class flal {
   public static String aacEncoder = "fdkaac";
   public static boolean debugFlag = false;
 
-  public static String[] fdkaacFlagsMusic
+  public static String[] fdkaacFlagsForMusic
     = new String[] { "-p", "2", "-m", "5" };
-  public static String[] fdkaacFlagsAudiobook
+  public static String[] fdkaacFlagsForAudiobook
     = new String[] { "-p", "2", "-m", "5" };
-  public static String[] fdkaacFlagsAudiotheatre
+  public static String[] fdkaacFlagsForAudiotheatre
     = new String[] { "-p", "2", "-m", "5" };
+  public static String[] afconvertFlagsForAudiobooks
+    = null;
 
+  public static Map<String,String[]> encoderFlags
+    = new HashMap<String,String[]>();
 
+  
   private static FileFilter flacFileFilter
     = new FileFilter() {
       public boolean accept(File file) {
@@ -66,31 +72,38 @@ public class flal {
       }
 
       if (configFile != null) {
-        Properties appProps = new Properties();
-        appProps.load(new FileInputStream(configFile));
+        Properties userProps = new Properties();
+        userProps.load(new FileInputStream(configFile));
 
-        if (appProps.containsKey("outputDir")) {
-          outputDir = appProps.getProperty("outputDir");
+        if (userProps.containsKey("outputDir")) {
+          outputDir = userProps.getProperty("outputDir");
         }
 
-        if (appProps.containsKey("rootDir")) {
-          rootDir = appProps.getProperty("rootDir");
+        if (userProps.containsKey("rootDir")) {
+          rootDir = userProps.getProperty("rootDir");
         }
 
-        if (appProps.containsKey("logDir")) {
-          logDir = appProps.getProperty("logDir");
+        if (userProps.containsKey("logDir")) {
+          logDir = userProps.getProperty("logDir");
         }
 
-        if (appProps.containsKey("debug")) {
-          debugFlag = appProps.getProperty("debug").equals("true");
+        if (userProps.containsKey("debug")) {
+          debugFlag = userProps.getProperty("debug").equals("true");
         }
 
-        if (appProps.containsKey("aacEncoder")) {
-          aacEncoder = appProps.getProperty("aacEncoder");
+        if (userProps.containsKey("aacEncoder")) {
+          aacEncoder = userProps.getProperty("aacEncoder");
           if (!aacEncoder.equals("fdkaac")
               && !aacEncoder.equals("afconvert")) {
             throw new Exception("Invalid aac encoder: \"" + aacEncoder + "\".");
           }
+        }
+
+        if (userProps.containsKey(aacEncoder + "FlagsForAudiobooks")) {
+          encoderFlags.put(
+              "audiobook",
+              userProps.getProperty(
+                aacEncoder + "FlagsForAudiobooks").split(","));
         }
       }
 
@@ -157,7 +170,8 @@ public class flal {
                 "sourceFiles", Arrays.asList(file),
                 "outputFile", new File(outputFilename),
                 "encoderName", aacEncoder,
-                "debugFlag", debugFlag));
+                "debugFlag", debugFlag,
+                "encoderParameters", encoderFlags.get(genre)));
           job.run();
         }
       }
@@ -228,7 +242,8 @@ public class flal {
           "sourceFiles", sourceFiles,
           "outputFile", outputFile,
           "encoderName", aacEncoder,
-          "debugFlag", debugFlag));
+          "debugFlag", debugFlag,
+          "encoderParameters", encoderFlags.get(genre)));
     job.run();
 
     return isMultiDirGroup;

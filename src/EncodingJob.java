@@ -61,7 +61,7 @@ public class EncodingJob {
   private File outputFile;
   private String encoderName;
   private boolean debugFlag = false;
-  private String[] encoderParameters = Constants.fdkaacEncoderDefaults;
+  private String[] encoderParameters = null;
   private boolean overwriteExisting = false;
   private boolean dummyProcessing = false;
   private Logger logger = null;
@@ -85,6 +85,7 @@ public class EncodingJob {
     this.outputFile = getParm(parameters, "outputFile");
     this.encoderName = getParm(parameters, "encoderName");
     this.debugFlag = getParm(parameters, "debugFlag");
+    this.encoderParameters = getParm(parameters, "encoderParameters");
   //private boolean overwriteExisting = false;
  // private boolean dummyProcessing = false;
   }
@@ -329,16 +330,25 @@ public class EncodingJob {
         }
 
         if (encoderName.equals("afconvert")) {
+          List<String> outProcessParams = new ArrayList<String>();
+          outProcessParams.addAll(
+              Arrays.asList( new String[]
+                { "afconvert",
+                  "-d", "aac",
+                  "-f", "m4af" }));
+          outProcessParams.addAll(Arrays.asList(encoderParameters));
+          outProcessParams.add(tmpWavFile.getAbsolutePath());
+          outProcessParams.add(tmpOutputFile.getAbsolutePath());
+
+          if (debugFlag) {
+            for (int i=0; i<outProcessParams.size(); i++) {
+              logMessage(
+                  "Param " + (i+1) + ": \"" + outProcessParams.get(i) + "\"");
+            }
+          }
+
           outProc = new ProcessBuilder(
-              new String[]
-              { "afconvert",
-                "-d", "aac",
-                "-f", "m4af",
-                "-s", "3",
-                "-u", "vbrq", "96", // 0 .. 127
-                tmpWavFile.getAbsolutePath(),
-                tmpOutputFile.getAbsolutePath()}
-              ).start();
+              outProcessParams.toArray(new String[0])).start();
           os = outProc.getOutputStream();
           InputStream oes = outProc.getErrorStream();
           oer = new InputStreamReader(oes);
