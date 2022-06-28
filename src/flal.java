@@ -31,6 +31,7 @@ public class flal {
   public static int nofEncodingJobsCreated = 0;
   public static String aacEncoder = "fdkaac";
   public static boolean debugFlag = false;
+  public static boolean dontConcat = false;
 
   public static String[] fdkaacFlagsForMusic
     = new String[] { "-p", "2", "-m", "5" };
@@ -91,6 +92,10 @@ public class flal {
           debugFlag = userProps.getProperty("debug").equals("true");
         }
 
+        if (userProps.containsKey("dontConcat")) {
+          dontConcat = userProps.getProperty("dontConcat").equals("true");
+        }
+
         if (userProps.containsKey("aacEncoder")) {
           aacEncoder = userProps.getProperty("aacEncoder");
           if (!aacEncoder.equals("fdkaac")
@@ -144,7 +149,8 @@ public class flal {
         String genre = tag.getFirst(FieldKey.GENRE).toLowerCase();
         String concat = getAndVerifyConcat(tag);
         if ((Constants.audioGroupGenres.contains(genre))
-            && (!concat.equals(Constants.CONCAT_FALSE))) {
+            && (!concat.equals(Constants.CONCAT_FALSE))
+            && dontConcat == false) {
           // audio group
           logger.log("Detected group, genre: \"" + genre + "\", concat: \""
               + concat + "\".");
