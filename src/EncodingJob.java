@@ -121,6 +121,25 @@ public class EncodingJob {
     String artist = tag.getFirst(FieldKey.ARTIST);
     String genre = tag.getFirst(FieldKey.GENRE);
     String composer = tag.getFirst(FieldKey.COMPOSER);
+    String releaseDate = tag.getFirst("DATE");
+
+    String trackNumber = null;
+    String trackTotal = null;
+    String discNumber = null;
+    String discTotal = null;
+    boolean isCompilation = false;
+
+    if (sourceFiles.size() == 1) {
+      trackNumber = getTagOrEmpty(tag, FieldKey.TRACK);
+      System.out.println("X: " + trackNumber);
+      trackTotal = getTagOrEmpty(tag, FieldKey.TRACK_TOTAL);
+      discNumber = getTagOrEmpty(tag, FieldKey.DISC_NO);
+      discTotal = getTagOrEmpty(tag, FieldKey.DISC_TOTAL);
+      String isCompilationAsString
+        = getTagOrEmpty(tag, FieldKey.IS_COMPILATION);
+      isCompilation = (isCompilationAsString != null
+          && isCompilationAsString.equals("1"));
+    }
 
     long bitrate = header.getBitRateAsNumber();
     int sampleRate = header.getSampleRateAsNumber();
@@ -176,27 +195,28 @@ public class EncodingJob {
                   "-o", tmpOutputFile.getAbsolutePath()
                 }));
 
-          if (title != null && title.length()>1) {
+          /*
+          if (title != null && title.length() > 0) {
             parameters.add("--title");
             parameters.add(title);
           }
 
-          if (artist != null && artist.length()>1) {
+          if (artist != null && artist.length() > 0) {
             parameters.add("--artist");
             parameters.add(artist);
           }
 
-          if (album != null && album.length()>1) {
+          if (album != null && album.length() > 0) {
             parameters.add("--album");
             parameters.add(album);
           }
 
-          if (composer != null && composer.length()>1) {
+          if (composer != null && composer.length() > 0) {
             parameters.add("--composer");
             parameters.add(composer);
           }
 
-          if (genre != null && genre.length()>1) {
+          if (genre != null && genre.length() > 0) {
             parameters.add("--genre");
             parameters.add(genre);
           }
@@ -206,17 +226,6 @@ public class EncodingJob {
           }
 
           if (sourceFiles.size() == 1) {
-            String trackNumber = getTagOrEmpty(tag, FieldKey.TRACK);
-            String trackTotal = getTagOrEmpty(tag, FieldKey.TRACK_TOTAL);
-            String discNumber = getTagOrEmpty(tag, FieldKey.DISC_NO);
-            String discTotal = getTagOrEmpty(tag, FieldKey.DISC_TOTAL);
-            String isCompilationAsString = getTagOrEmpty(tag,
-                FieldKey.IS_COMPILATION);
-
-            boolean isCompilation
-              = (isCompilationAsString != null
-                  && isCompilationAsString.equals("1"));
-
             if (!trackNumber.isEmpty() || !trackTotal.isEmpty()) {
               parameters.addAll(Arrays.asList( new String[]
                     { "--track", trackNumber + "/" + trackTotal }));
@@ -232,6 +241,7 @@ public class EncodingJob {
                     { "--tag", "cpil:1" }));
             }
           }
+          */
 
           parameters.add("-");
 
@@ -363,6 +373,53 @@ public class EncodingJob {
 
         f = AudioFileIO.read(tmpOutputFile);
         tag = f.getTag();
+
+        if (title != null && title.length() > 0) {
+          tag.setField(FieldKey.TITLE, title);
+        }
+
+        if (artist != null && artist.length() > 0) {
+          tag.setField(FieldKey.ARTIST, artist);
+        }
+
+        if (album != null && album.length() > 0) {
+          tag.setField(FieldKey.ALBUM, album);
+        }
+
+        if (composer != null && composer.length() > 0) {
+          tag.setField(FieldKey.COMPOSER, composer);
+        }
+
+        if (genre != null && genre.length() > 0) {
+          tag.setField(FieldKey.GENRE, genre);
+        }
+
+        if (releaseDate != null && releaseDate.length() > 0) {
+          tag.setField(FieldKey.YEAR, releaseDate);
+        }
+
+        if (sourceFiles.size() == 1) {
+          if (trackNumber != null && trackNumber.length() > 0) {
+            tag.setField(FieldKey.TRACK, trackNumber);
+          }
+
+          if (trackTotal != null && trackTotal.length() > 0) {
+            tag.setField(FieldKey.TRACK_TOTAL, trackTotal);
+          }
+
+          if (discNumber != null && discNumber.length() > 0) {
+            tag.setField(FieldKey.DISC_NO, discNumber);
+          }
+
+          if (discTotal != null && discTotal.length() > 0) {
+            tag.setField(FieldKey.DISC_TOTAL, discTotal);
+          }
+
+          if (isCompilation) {
+            tag.setField(FieldKey.IS_COMPILATION, "1");
+          }
+        }
+
         tag.addField(existingArtworkList.get(0));
         f.commit();
       }
