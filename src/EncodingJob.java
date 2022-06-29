@@ -131,7 +131,6 @@ public class EncodingJob {
 
     if (sourceFiles.size() == 1) {
       trackNumber = getTagOrEmpty(tag, FieldKey.TRACK);
-      System.out.println("X: " + trackNumber);
       trackTotal = getTagOrEmpty(tag, FieldKey.TRACK_TOTAL);
       discNumber = getTagOrEmpty(tag, FieldKey.DISC_NO);
       discTotal = getTagOrEmpty(tag, FieldKey.DISC_TOTAL);

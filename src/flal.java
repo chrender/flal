@@ -33,14 +33,20 @@ public class flal {
   public static boolean debugFlag = false;
   public static boolean dontConcat = false;
 
-  public static String[] fdkaacFlagsForMusic
-    = new String[] { "-p", "2", "-m", "5" };
-  public static String[] fdkaacFlagsForAudiobook
-    = new String[] { "-p", "2", "-m", "5" };
-  public static String[] fdkaacFlagsForAudiotheatre
-    = new String[] { "-p", "2", "-m", "5" };
-  public static String[] afconvertFlagsForAudiobooks
-    = null;
+  public static Map<String, Map<String, String[]>> defaultEncoderFlags
+    = Map.of(
+
+        "fdkaac",
+        Map.of(
+          "music", new String[] {  "-p", "2", "-m", "5" },
+          "audiobook", new String[] {  "-p", "2", "-m", "5" },
+          "audio theatre", new String[] {  "-p", "2", "-m", "5" } ),
+
+        "afconvert",
+        Map.of(
+          "music", new String[] {  "-s", "3", "-u", "vbrq", "64" },
+          "audiobook", new String[] {  "-s", "3", "-u", "vbrq", "64" },
+          "audio theatre", new String[] {  "-s", "3", "-u", "vbrq", "64" } ));
 
   public static Map<String,String[]> encoderFlags
     = new HashMap<String,String[]>();
@@ -72,8 +78,8 @@ public class flal {
         }
       }
 
+      Properties userProps = new Properties();
       if (configFile != null) {
-        Properties userProps = new Properties();
         userProps.load(new FileInputStream(configFile));
 
         if (userProps.containsKey("outputDir")) {
@@ -103,13 +109,39 @@ public class flal {
             throw new Exception("Invalid aac encoder: \"" + aacEncoder + "\".");
           }
         }
+      }
 
-        if (userProps.containsKey(aacEncoder + "FlagsForAudiobooks")) {
-          encoderFlags.put(
-              "audiobook",
-              userProps.getProperty(
-                aacEncoder + "FlagsForAudiobooks").split(","));
-        }
+      if (userProps.containsKey(aacEncoder + "FlagsForMusic")) {
+        encoderFlags.put(
+            "music",
+            userProps.getProperty(
+              aacEncoder + "FlagsForMusic").split(","));
+      }
+      else {
+        encoderFlags.put("music",
+            (defaultEncoderFlags.get(aacEncoder)).get("music"));
+      }
+
+      if (userProps.containsKey(aacEncoder + "FlagsForAudiobooks")) {
+        encoderFlags.put(
+            "audiobook",
+            userProps.getProperty(
+              aacEncoder + "FlagsForAudiobooks").split(","));
+      }
+      else {
+        encoderFlags.put("audiobook",
+            (defaultEncoderFlags.get(aacEncoder)).get("audiobook"));
+      }
+
+      if (userProps.containsKey(aacEncoder + "FlagsForAudiotheatre")) {
+        encoderFlags.put(
+            "audio theatre",
+            userProps.getProperty(
+              aacEncoder + "FlagsForAudiobtheatre").split(","));
+      }
+      else {
+        encoderFlags.put("audio theatre",
+            (defaultEncoderFlags.get(aacEncoder)).get("audio theatre"));
       }
 
       logger = new Logger(logDir);
@@ -148,6 +180,9 @@ public class flal {
         String album = tag.getFirst(FieldKey.ALBUM);
         String genre = tag.getFirst(FieldKey.GENRE).toLowerCase();
         String concat = getAndVerifyConcat(tag);
+        if (debugFlag) {
+          logger.log("Detected genre \"" + genre + "\".");
+        }
         if ((Constants.audioGroupGenres.contains(genre))
             && (!concat.equals(Constants.CONCAT_FALSE))
             && dontConcat == false) {
