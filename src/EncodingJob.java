@@ -419,7 +419,9 @@ public class EncodingJob {
           }
         }
 
-        tag.addField(existingArtworkList.get(0));
+        if (existingArtworkList != null && existingArtworkList.size() > 0) {
+          tag.addField(existingArtworkList.get(0));
+        }
         f.commit();
       }
 
