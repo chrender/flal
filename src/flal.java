@@ -203,6 +203,10 @@ public class flal {
             + file.getName().substring(0,
                 file.getName().length()
                 - Constants.FLAC_SUFFIX.length()) + ".m4a";
+          String[] genresEncoderFlags
+            = encoderFlags.containsKey(genre)
+            ? encoderFlags.get(genre)
+            : encoderFlags.get("music");
           EncodingJob job = new EncodingJob(
               Map.of(
                 "logger", logger,
@@ -212,7 +216,7 @@ public class flal {
                 "outputFile", new File(outputFilename),
                 "encoderName", aacEncoder,
                 "debugFlag", debugFlag,
-                "encoderParameters", encoderFlags.get(genre)));
+                "encoderParameters", genresEncoderFlags));
           job.run();
         }
       }
@@ -275,6 +279,11 @@ public class flal {
     String outputFilename = outputDir + "/" + relativeGroupRoot + ".m4a";
     File outputFile = new File(outputFilename);
 
+    String[] genresEncoderFlags
+      = encoderFlags.containsKey(genre)
+      ? encoderFlags.get(genre)
+      : encoderFlags.get("music");
+
     EncodingJob job = new EncodingJob(
         Map.of(
           "logger", logger,
@@ -284,7 +293,7 @@ public class flal {
           "outputFile", outputFile,
           "encoderName", aacEncoder,
           "debugFlag", debugFlag,
-          "encoderParameters", encoderFlags.get(genre)));
+          "encoderParameters", genresEncoderFlags));
     job.run();
 
     return isMultiDirGroup;
