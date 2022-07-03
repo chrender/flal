@@ -31,6 +31,7 @@ public class flal {
   public static int nofEncodingJobsCreated = 0;
   public static String aacEncoder = "fdkaac";
   public static boolean debugFlag = false;
+  private static boolean overwriteExisting = false;
   public static boolean dontConcat = false;
 
   public static Map<String, Map<String, String[]>> defaultEncoderFlags
@@ -96,6 +97,14 @@ public class flal {
 
         if (userProps.containsKey("debug")) {
           debugFlag = userProps.getProperty("debug").equals("true");
+        }
+
+        if (userProps.containsKey("overwriteExisting")) {
+          debugFlag = userProps.getProperty("overwriteExisting").equals("true");
+        }
+
+        if (userProps.containsKey("dummyProcessing")) {
+          debugFlag = userProps.getProperty("dummyProcessing").equals("true");
         }
 
         if (userProps.containsKey("dontConcat")) {

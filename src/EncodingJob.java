@@ -31,12 +31,6 @@ import de.christoph_ender.audio.RF64FileOutputStream;
 
 
 
-// TODO: Tag "afconvert"ed files.
-
-// TODO: Implement "overwriteExisting".
-
-// TODO: Implement "dummyProcessing".
-
 // TODO: Use fifo/named pipe for afconvert when available.
 
 // TODO: Integrity Check: When group encompasses multiple directories,
@@ -85,9 +79,9 @@ public class EncodingJob {
     this.outputFile = getParm(parameters, "outputFile");
     this.encoderName = getParm(parameters, "encoderName");
     this.debugFlag = getParm(parameters, "debugFlag");
+    this.overwriteExisting = getParm(parameters, "overwriteExisting");
+    this.dummyProcessing = getParm(parameters, "dummyProcessing");
     this.encoderParameters = getParm(parameters, "encoderParameters");
-  //private boolean overwriteExisting = false;
- // private boolean dummyProcessing = false;
   }
 
   /**
@@ -164,7 +158,7 @@ public class EncodingJob {
       outputFile.getParentFile().mkdirs();
     }
 
-    if (targetLastModified < latestModified) {
+    if (targetLastModified < latestModified || overwriteExisting) {
       TagField binaryField = tag.getFirstField(FieldKey.COVER_ART);
       List<Artwork> existingArtworkList = tag.getArtworkList();
 
