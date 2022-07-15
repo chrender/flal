@@ -187,6 +187,9 @@ public class EncodingJob {
                   "--raw-format" , "S"+bits+"L",
                   "-o", tmpOutputFile.getAbsolutePath()
                 }));
+          if (this.encoderParameters != null) {
+            parameters.addAll(Arrays.asList(this.encoderParameters));
+          }
 
           /*
           if (title != null && title.length() > 0) {
