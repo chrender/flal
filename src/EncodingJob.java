@@ -419,6 +419,25 @@ public class EncodingJob {
         if (existingArtworkList != null && existingArtworkList.size() > 0) {
           tag.addField(existingArtworkList.get(0));
         }
+
+        StringBuffer comment = new StringBuffer();
+        comment.append("Encoder: \"");
+        comment.append(encoderName);
+        comment.append("\", Parameters:");
+        boolean firstIteration = true;
+        for (String parameter : encoderParameters) {
+          if (firstIteration) {
+            firstIteration = false;
+          }
+          else {
+            comment.append(", ");
+          }
+          comment.append("\"");
+          comment.append(parameter);
+          comment.append("\"");
+        }
+        tag.addField(FieldKey.COMMENT, comment.toString());
+
         f.commit();
       }
 
