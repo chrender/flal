@@ -100,11 +100,13 @@ public class flal {
         }
 
         if (userProps.containsKey("overwriteExisting")) {
-          debugFlag = userProps.getProperty("overwriteExisting").equals("true");
+          overwriteExisting
+            = userProps.getProperty("overwriteExisting").equals("true");
         }
 
         if (userProps.containsKey("dummyProcessing")) {
-          debugFlag = userProps.getProperty("dummyProcessing").equals("true");
+          dummyProcessing
+            = userProps.getProperty("dummyProcessing").equals("true");
         }
 
         if (userProps.containsKey("dontConcat")) {
@@ -146,7 +148,7 @@ public class flal {
         encoderFlags.put(
             "audio theatre",
             userProps.getProperty(
-              aacEncoder + "FlagsForAudiobtheatre").split(","));
+              aacEncoder + "FlagsForAudiotheatre").split(","));
       }
       else {
         encoderFlags.put("audio theatre",
@@ -225,6 +227,8 @@ public class flal {
                 "outputFile", new File(outputFilename),
                 "encoderName", aacEncoder,
                 "debugFlag", debugFlag,
+                "overwriteExisting", overwriteExisting,
+                "dummyProcessing", dummyProcessing,
                 "encoderParameters", genresEncoderFlags));
           job.run();
         }
@@ -302,6 +306,8 @@ public class flal {
           "outputFile", outputFile,
           "encoderName", aacEncoder,
           "debugFlag", debugFlag,
+          "overwriteExisting", overwriteExisting,
+          "dummyProcessing", dummyProcessing,
           "encoderParameters", genresEncoderFlags));
     job.run();
 
