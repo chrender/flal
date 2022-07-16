@@ -33,7 +33,7 @@ public class flal {
   public static boolean debugFlag = false;
   private static boolean overwriteExisting = false;
   public static boolean dontConcat = false;
-  public static int numberOfEncodingJobs = 8;
+  public static int numberOfParallelJobs = 4;
   public static EncodingJob[] encodingJobs = null;
 
   public static Map<String, Map<String, String[]>> defaultEncoderFlags
@@ -115,6 +115,11 @@ public class flal {
           dontConcat = userProps.getProperty("dontConcat").equals("true");
         }
 
+        if (userProps.containsKey("numberOfParallelJobs")) {
+          numberOfParallelJobs
+            = Integer.parseInt(userProps.getProperty("numberOfParallelJobs"));
+        }
+
         if (userProps.containsKey("aacEncoder")) {
           aacEncoder = userProps.getProperty("aacEncoder");
           if (!aacEncoder.equals("fdkaac")
@@ -157,7 +162,7 @@ public class flal {
             (defaultEncoderFlags.get(aacEncoder)).get("audio theatre"));
       }
 
-      encodingJobs = new EncodingJob[numberOfEncodingJobs];
+      encodingJobs = new EncodingJob[numberOfParallelJobs];
 
       logger = new Logger(logDir);
 
