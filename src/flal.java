@@ -33,6 +33,8 @@ public class flal {
   public static boolean debugFlag = false;
   private static boolean overwriteExisting = false;
   public static boolean dontConcat = false;
+  public static int numberOfEncodingJobs = 8;
+  public static EncodingJob[] encodingJobs = null;
 
   public static Map<String, Map<String, String[]>> defaultEncoderFlags
     = Map.of(
@@ -155,6 +157,8 @@ public class flal {
             (defaultEncoderFlags.get(aacEncoder)).get("audio theatre"));
       }
 
+      encodingJobs = new EncodingJob[numberOfEncodingJobs];
+
       logger = new Logger(logDir);
 
       File root = new File(rootDir);
@@ -230,7 +234,7 @@ public class flal {
                 "overwriteExisting", overwriteExisting,
                 "dummyProcessing", dummyProcessing,
                 "encoderParameters", genresEncoderFlags));
-          job.run();
+          runEncodingJob(job);
         }
       }
     }
@@ -309,7 +313,7 @@ public class flal {
           "overwriteExisting", overwriteExisting,
           "dummyProcessing", dummyProcessing,
           "encoderParameters", genresEncoderFlags));
-    job.run();
+    runEncodingJob(job);
 
     return isMultiDirGroup;
   }
@@ -337,6 +341,35 @@ public class flal {
   public static String getNextEncodingJobName() {
     nofEncodingJobsCreated++;
     return "job" + nofEncodingJobsCreated;
+  }
+
+
+  public static void runEncodingJob(EncodingJob newJob) throws Exception {
+    int index = 0;
+findUnusedSlot:
+    while (true) {
+      while (index < encodingJobs.length) {
+        EncodingJob job = encodingJobs[index];
+        if (job == null || job.isAlive() == false) {
+          if (job != null) {
+            if (debugFlag) {
+              logger.log("Waiting for slot " + index + " to end.");
+              job.join();
+            }
+          }
+          break findUnusedSlot;
+        }
+        index++;
+      }
+      index = 0;
+      Thread.sleep(1);
+    }
+
+    if (debugFlag) {
+      logger.log("Using slot " + index + " for new job.");
+    }
+    encodingJobs[index] = newJob;
+    newJob.start();
   }
 }
 
