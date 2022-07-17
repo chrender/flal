@@ -38,6 +38,9 @@
 
 <project name="flal" default="compile" basedir=".">
 
+  <property name="version" value="0.2"/>
+  <property name="build" location="build"/>
+  <property name="classes" location="${build}/classes"/>
   <property name="lib.dir" value="lib" />
 
   <path id="classpath">
@@ -45,23 +48,23 @@
   </path>
 
   <target name="clean">
-    <delete dir="build"/>
+    <delete dir="${build}"/>
   </target>
 
   <target name="compile">
-    <mkdir dir="build/classes"/>
-    <javac srcdir="src" destdir="build/classes"
+    <mkdir dir="${classes}"/>
+    <javac srcdir="src" destdir="${classes}"
     classpathref="classpath" includeantruntime="false" debug="true">
      <compilerarg value="-Xlint:unchecked" />
      <compilerarg value="-Xlint:deprecation" />
      <compilerarg value="-Xdiags:verbose" />
     </javac>
-    <copy file="src/flal.properties" todir="build/classes"/>
   </target>
 
   <target name="run">
-    <java fork="true" classname="flal" classpathref="classpath">
-      <classpath path="build/classes"/>
+    <java fork="true" classname="de.christoph_ender.flal.flal"
+     classpathref="classpath">
+    <classpath path="${classes}"/>
     </java>
   </target>
 
