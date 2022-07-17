@@ -500,5 +500,10 @@ public class EncodingJob
     String result = tag.getFirst(fieldKey);
     return result == null ? "" : result;
   }
+
+
+  public String getJobName() {
+    return jobName;
+  }
 }
 

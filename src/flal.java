@@ -169,6 +169,16 @@ public class flal {
       File root = new File(rootDir);
       if (root.isDirectory()) {
         processFlalDirectory(root);
+
+        for (EncodingJob encodingJob : encodingJobs) {
+          if (encodingJob != null) {
+            if (debugFlag) {
+              logger.log("Waiting for \""
+                  + encodingJob.getJobName() + "\" to finish.");
+            }
+            encodingJob.join();
+          }
+        }
       }
       else {
         logger.log("root is not a directory.");
@@ -358,7 +368,7 @@ findUnusedSlot:
         if (job == null || job.isAlive() == false) {
           if (job != null) {
             if (debugFlag) {
-              logger.log("Waiting for slot " + index + " to end.");
+              logger.log("Waiting for \"" + job.getJobName() + "\" to finish.");
               job.join();
             }
           }
