@@ -34,8 +34,6 @@ import de.christoph_ender.audio.RF64FileOutputStream;
 
 
 
-// TODO: Use fifo/named pipe for afconvert when available.
-
 // TODO: Integrity Check: When group encompasses multiple directories,
 // check if they all actually belong to this group, e.g. no music files
 // in a directory which has several DISCTOTAL>1 subdirs.
@@ -44,9 +42,6 @@ import de.christoph_ender.audio.RF64FileOutputStream;
 
 // TODO: Implement <targetFile.suffix>.lock for parallel processing.
 
-
-// afconvert flags / settings:
-// https://ss64.com/osx/afconvert.html
 
 
 public class EncodingJob
@@ -507,6 +502,11 @@ public class EncodingJob
 
   public String getJobName() {
     return jobName;
+  }
+
+
+  public Exception getLastException() {
+    return lastException;
   }
 }
 

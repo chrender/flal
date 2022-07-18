@@ -179,7 +179,7 @@ public class flal {
               logger.log("Waiting for \""
                   + encodingJob.getJobName() + "\" to finish.");
             }
-            encodingJob.join();
+            joinAndTestEncodingJob(encodingJob);
           }
         }
       }
@@ -372,7 +372,7 @@ findUnusedSlot:
           if (job != null) {
             if (debugFlag) {
               logger.log("Waiting for \"" + job.getJobName() + "\" to finish.");
-              job.join();
+              joinAndTestEncodingJob(job);
             }
           }
           break findUnusedSlot;
@@ -388,6 +388,16 @@ findUnusedSlot:
     }
     encodingJobs[index] = newJob;
     newJob.start();
+  }
+
+
+  public static void joinAndTestEncodingJob(
+      EncodingJob encodingJob) throws Exception {
+    encodingJob.join();
+    Exception jobsLastException = encodingJob.getLastException();
+    if (jobsLastException != null) {
+      throw jobsLastException;
+    }
   }
 }
 
