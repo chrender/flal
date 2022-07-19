@@ -38,6 +38,7 @@ public class flal {
   public static boolean dontConcat = false;
   public static int numberOfParallelJobs = 4;
   public static EncodingJob[] encodingJobs = null;
+  public static String outputSuffix = null;
 
   public static Map<String, Map<String, String[]>> defaultEncoderFlags
     = Map.of(
@@ -52,7 +53,13 @@ public class flal {
         Map.of(
           "music", new String[] {  "-s", "3", "-u", "vbrq", "64" },
           "audiobook", new String[] {  "-s", "3", "-u", "vbrq", "64" },
-          "audio theatre", new String[] {  "-s", "3", "-u", "vbrq", "64" } ));
+          "audio theatre", new String[] {  "-s", "3", "-u", "vbrq", "64" } ),
+
+        "lame",
+        Map.of(
+          "music", new String[] {  "-m", "j", "-V", "2" },
+          "audiobook", new String[] {  "-m", "m", "--cbr", "-b", "128" },
+          "audio theatre", new String[] {  "-m", "m", "--cbr", "-b", "128" } ));
 
   public static Map<String,String[]> encoderFlags
     = new HashMap<String,String[]>();
@@ -126,11 +133,14 @@ public class flal {
         if (userProps.containsKey("aacEncoder")) {
           aacEncoder = userProps.getProperty("aacEncoder");
           if (!aacEncoder.equals("fdkaac")
-              && !aacEncoder.equals("afconvert")) {
+              && !aacEncoder.equals("afconvert")
+              && !aacEncoder.equals("lame")) {
             throw new Exception("Invalid aac encoder: \"" + aacEncoder + "\".");
-          }
+              }
         }
       }
+
+      outputSuffix = aacEncoder.equals("lame") ? ".mp3" : ".m4a";
 
       if (userProps.containsKey(aacEncoder + "FlagsForMusic")) {
         encoderFlags.put(
@@ -235,7 +245,7 @@ public class flal {
             + "/"
             + file.getName().substring(0,
                 file.getName().length()
-                - Constants.FLAC_SUFFIX.length()) + ".m4a";
+                - Constants.FLAC_SUFFIX.length()) + outputSuffix;
           String[] genresEncoderFlags
             = encoderFlags.containsKey(genre)
             ? encoderFlags.get(genre)
@@ -311,7 +321,7 @@ public class flal {
       }
     }
 
-    String outputFilename = outputDir + "/" + relativeGroupRoot + ".m4a";
+    String outputFilename = outputDir + "/" + relativeGroupRoot + outputSuffix;
     File outputFile = new File(outputFilename);
 
     String[] genresEncoderFlags

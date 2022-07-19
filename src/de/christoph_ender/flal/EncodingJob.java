@@ -164,7 +164,7 @@ public class EncodingJob
         List<Artwork> existingArtworkList = tag.getArtworkList();
 
         File tmpOutputFile = File.createTempFile(
-            outputFile.getName() + "-", ".m4a");
+            outputFile.getName() + "-", encoderName.equals("lame") ? ".mp3" : ".m4a");
         tmpOutputFile.deleteOnExit();
 
         if (dummyProcessing == true) {
@@ -192,55 +192,57 @@ public class EncodingJob
               parameters.addAll(Arrays.asList(this.encoderParameters));
             }
 
-            /*
-               if (title != null && title.length() > 0) {
-               parameters.add("--title");
-               parameters.add(title);
-               }
+            parameters.add("-");
 
-               if (artist != null && artist.length() > 0) {
-               parameters.add("--artist");
-               parameters.add(artist);
-               }
+            outProc = new ProcessBuilder(
+                parameters.toArray(new String[0])).start();
+            os = outProc.getOutputStream();
+            InputStream oes = outProc.getErrorStream();
+            oer = new InputStreamReader(oes);
 
-               if (album != null && album.length() > 0) {
-               parameters.add("--album");
-               parameters.add(album);
-               }
+            flacParameters.add("--sign=signed");
+            flacParameters.add("--endian=little");
+            flacParameters.add("--force-raw-format");
 
-               if (composer != null && composer.length() > 0) {
-               parameters.add("--composer");
-               parameters.add(composer);
-               }
+            tmpWavFile = null;
+          }
+          else if (encoderName.equals("lame")) {
+            if (channels > 2) {
+              throw new Exception(channels + " channels not supported with lame.");
+            }
+            List<String> parameters = new ArrayList<String>();
+            parameters.addAll(Arrays.asList( new String[]
+                  { "lame",
+                    "-r",
+                    "--little-endian",
+                    "-s", Float.toString((float)sampleRate/1000),
+                    "--signed",
+                    "--bitwidth", Integer.toString(bits) } ));
+                    //"--add-id3v2" } ));
+            if (this.encoderParameters != null) {
+              parameters.addAll(Arrays.asList(this.encoderParameters));
 
-               if (genre != null && genre.length() > 0) {
-               parameters.add("--genre");
-               parameters.add(genre);
-               }
-
-               if (this.encoderParameters != null) {
-               parameters.addAll(Arrays.asList(this.encoderParameters));
-               }
-
-               if (sourceFiles.size() == 1) {
-               if (!trackNumber.isEmpty() || !trackTotal.isEmpty()) {
-               parameters.addAll(Arrays.asList( new String[]
-               { "--track", trackNumber + "/" + trackTotal }));
-               }
-
-               if (!discNumber.isEmpty() || !discTotal.isEmpty()) {
-               parameters.addAll(Arrays.asList( new String[]
-               { "--disk", discNumber + "/" + discTotal }));
-               }
-
-               if (isCompilation) {
-               parameters.addAll(Arrays.asList( new String[]
-               { "--tag", "cpil:1" }));
-               }
-               }
-               */
+              if (channels == 2) {
+                // In case we're downmixing from stereo to mono we have to
+                // set the "-a" parameter.
+                for (int i=0; i<encoderParameters.length-1; i++) {
+                  if (encoderParameters[i].equals("-m") && encoderParameters[i+1].equals("m")) {
+                    parameters.add("-a");
+                    break;
+                  }
+                }
+              }
+            }
 
             parameters.add("-");
+            parameters.add(tmpOutputFile.getAbsolutePath());
+
+            if (debugFlag) {
+              for (int i=0; i<parameters.size(); i++) {
+                logMessage(
+                    "Param " + (i+1) + ": \"" + parameters.get(i) + "\"");
+              }
+            }
 
             outProc = new ProcessBuilder(
                 parameters.toArray(new String[0])).start();
@@ -369,7 +371,7 @@ public class EncodingJob
           }
 
           f = AudioFileIO.read(tmpOutputFile);
-          tag = f.getTag();
+          tag = f.getTagOrCreateAndSetDefault();
 
           if (title != null && title.length() > 0) {
             tag.setField(FieldKey.TITLE, title);
