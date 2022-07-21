@@ -59,6 +59,7 @@ public class EncodingJob
   private boolean dummyProcessing = false;
   private Logger logger = null;
   public Exception lastException = null;
+  private String customGenreName = null;
 
 
   @SuppressWarnings("unchecked")
@@ -82,6 +83,7 @@ public class EncodingJob
     this.overwriteExisting = getParm(parameters, "overwriteExisting");
     this.dummyProcessing = getParm(parameters, "dummyProcessing");
     this.encoderParameters = getParm(parameters, "encoderParameters");
+    this.customGenreName = getParm(parameters, "customGenreName");
   }
 
   /**
@@ -389,9 +391,12 @@ public class EncodingJob
             tag.setField(FieldKey.COMPOSER, composer);
           }
 
-          if (genre != null && genre.length() > 0) {
-            tag.setField(FieldKey.GENRE, genre);
+          if (customGenreName != null) {
+            tag.setField(FieldKey.GENRE, customGenreName);
           }
+          else if (genre != null && genre.length() > 0) {
+            tag.setField(FieldKey.GENRE, genre);
+          };
 
           if (releaseDate != null && releaseDate.length() > 0) {
             tag.setField(FieldKey.YEAR, releaseDate);

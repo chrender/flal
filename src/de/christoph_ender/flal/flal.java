@@ -14,8 +14,6 @@ import java.util.Properties;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.FieldKey;
 
@@ -39,6 +37,10 @@ public class flal {
   public static int numberOfParallelJobs = 4;
   public static EncodingJob[] encodingJobs = null;
   public static String outputSuffix = null;
+  public static String customAudiobookGenre = null;
+  public static String customAudiotheatreGenre = null;
+  public static Map<String,String> customGenreNames
+    = new HashMap<String,String>();
 
   public static Map<String, Map<String, String[]>> defaultEncoderFlags
     = Map.of(
@@ -130,13 +132,23 @@ public class flal {
             = Integer.parseInt(userProps.getProperty("numberOfParallelJobs"));
         }
 
+        if (userProps.containsKey("customGenreAudiobook")) {
+          customGenreNames.put("audiobook",
+              userProps.getProperty("customGenreAudiobook"));
+        }
+
+        if (userProps.containsKey("customGenreAudiotheatre")) {
+          customGenreNames.put("audio theatre",
+              userProps.getProperty("customGenreAudiotheatre"));
+        }
+
         if (userProps.containsKey("aacEncoder")) {
           aacEncoder = userProps.getProperty("aacEncoder");
           if (!aacEncoder.equals("fdkaac")
               && !aacEncoder.equals("afconvert")
               && !aacEncoder.equals("lame")) {
             throw new Exception("Invalid aac encoder: \"" + aacEncoder + "\".");
-              }
+          }
         }
       }
 
@@ -251,17 +263,19 @@ public class flal {
             ? encoderFlags.get(genre)
             : encoderFlags.get("music");
           EncodingJob job = new EncodingJob(
-              Map.of(
-                "logger", logger,
-                "jobName", getNextEncodingJobName(),
-                "rootDir", rootDir,
-                "sourceFiles", Arrays.asList(file),
-                "outputFile", new File(outputFilename),
-                "encoderName", aacEncoder,
-                "debugFlag", debugFlag,
-                "overwriteExisting", overwriteExisting,
-                "dummyProcessing", dummyProcessing,
-                "encoderParameters", genresEncoderFlags));
+              Map.ofEntries(
+                Map.entry("logger", logger),
+                Map.entry("jobName", getNextEncodingJobName()),
+                Map.entry("rootDir", rootDir),
+                Map.entry("sourceFiles", Arrays.asList(file)),
+                Map.entry("outputFile", new File(outputFilename)),
+                Map.entry("encoderName", aacEncoder),
+                Map.entry("debugFlag", debugFlag),
+                Map.entry("overwriteExisting", overwriteExisting),
+                Map.entry("dummyProcessing", dummyProcessing),
+                Map.entry("encoderParameters", genresEncoderFlags),
+                Map.entry("customGenreName",
+                  getCustomGenreName(genre.toLowerCase()))));
           runEncodingJob(job);
         }
       }
@@ -330,17 +344,19 @@ public class flal {
       : encoderFlags.get("music");
 
     EncodingJob job = new EncodingJob(
-        Map.of(
-          "logger", logger,
-          "jobName", getNextEncodingJobName(),
-          "rootDir", rootDir,
-          "sourceFiles", sourceFiles,
-          "outputFile", outputFile,
-          "encoderName", aacEncoder,
-          "debugFlag", debugFlag,
-          "overwriteExisting", overwriteExisting,
-          "dummyProcessing", dummyProcessing,
-          "encoderParameters", genresEncoderFlags));
+        Map.ofEntries(
+          Map.entry("logger", logger),
+          Map.entry("jobName", getNextEncodingJobName()),
+          Map.entry("rootDir", rootDir),
+          Map.entry("sourceFiles", sourceFiles),
+          Map.entry("outputFile", outputFile),
+          Map.entry("encoderName", aacEncoder),
+          Map.entry("debugFlag", debugFlag),
+          Map.entry("overwriteExisting", overwriteExisting),
+          Map.entry("dummyProcessing", dummyProcessing),
+          Map.entry("encoderParameters", genresEncoderFlags),
+          Map.entry("customGenreName",
+            getCustomGenreName(genre.toLowerCase()))));
     runEncodingJob(job);
 
     return isMultiDirGroup;
@@ -407,6 +423,17 @@ findUnusedSlot:
     Exception jobsLastException = encodingJob.getLastException();
     if (jobsLastException != null) {
       throw jobsLastException;
+    }
+  }
+
+
+  private static String getCustomGenreName(String genre) {
+    if (customGenreNames.containsKey(genre)) {
+      System.out.println(customGenreNames.get(genre));
+      return customGenreNames.get(genre);
+    }
+    else {
+      return genre;
     }
   }
 }
