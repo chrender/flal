@@ -65,6 +65,7 @@
     <java fork="true" classname="de.christoph_ender.flal.flal"
      classpathref="classpath">
     <classpath path="${classes}"/>
+      <!--<jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000"/>-->
     </java>
   </target>
 
