@@ -37,6 +37,7 @@ import de.christoph_ender.audio.RF64FileOutputStream;
 
 // TODO: Implement <targetFile.suffix>.lock for parallel processing.
 
+// TODO: Javadoc
 
 
 public class EncodingJob
@@ -215,7 +216,6 @@ public class EncodingJob
                     "-s", Float.toString((float)sampleRate/1000),
                     "--signed",
                     "--bitwidth", Integer.toString(bits) } ));
-                    //"--add-id3v2" } ));
             if (this.encoderParameters != null) {
               parameters.addAll(Arrays.asList(this.encoderParameters));
 
