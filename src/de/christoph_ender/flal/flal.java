@@ -67,6 +67,16 @@ public class flal {
     = new HashMap<String,String[]>();
 
   
+  private static FileFilter regularFileFilter
+    = new FileFilter() {
+      public boolean accept(File file) {
+        return file.isDirectory()
+          || (!file.getName().equals(".")
+            && (!file.getName().equals("..")));
+      }
+    };
+
+
   private static FileFilter flacFileFilter
     = new FileFilter() {
       public boolean accept(File file) {
@@ -82,7 +92,7 @@ public class flal {
     try {
       File configFile = null;
 
-      String userDir = System. getProperty("user.home");
+      String userDir = System.getProperty("user.home");
       configFile = new File(userDir + "/." + Constants.configFilename);
       if (configFile.exists() == false) {
         String rootPath= Thread.currentThread(
@@ -191,9 +201,15 @@ public class flal {
 
       logger = new Logger(logDir);
 
+      File outputRootDir = new File(outputDir);
+      List<String> oldOutputFilenames = new ArrayList<String>();
+      listOldOutputFiles(outputRootDir, oldOutputFilenames);
+
       File root = new File(rootDir);
       if (root.isDirectory()) {
-        processFlalDirectory(root);
+        List<String> newOutputFilenames = new ArrayList<String>();
+
+        processFlalDirectory(root, newOutputFilenames);
 
         for (EncodingJob encodingJob : encodingJobs) {
           if (encodingJob != null) {
@@ -203,6 +219,19 @@ public class flal {
             }
             joinAndTestEncodingJob(encodingJob);
           }
+        }
+
+        for (String newOutputFilename : newOutputFilenames) {
+          if (oldOutputFilenames.contains(newOutputFilename)) {
+            oldOutputFilenames.remove(newOutputFilename);
+          }
+        }
+
+        System.out.println(oldOutputFilenames.size() + " old files");
+        System.out.println(newOutputFilenames.size() + " new files");
+        System.out.println("Superfluous:");
+        for (String oldOutputFilename : oldOutputFilenames) {
+          System.out.println(oldOutputFilename);
         }
       }
       else {
@@ -215,12 +244,32 @@ public class flal {
   }
 
 
-  public static boolean processFlalDirectory(File dir) throws Exception {
+  public static void listOldOutputFiles(
+      File dir,
+      List<String> oldOutputFilenames
+      ) throws Exception {
+    File[] files = dir.listFiles(regularFileFilter);
+    for (File file : files) {
+      if (file.isDirectory()) {
+        listOldOutputFiles(file, oldOutputFilenames);
+      }
+      else {
+        oldOutputFilenames.add(file.getAbsolutePath().substring(outputDir.length()+1));
+      }
+    }
+  }
+
+
+  public static boolean processFlalDirectory(
+      File dir,
+      List<String> newOutputFilenames
+      ) throws Exception {
     File[] files = dir.listFiles(flacFileFilter);
     Arrays.sort(files);
     for (File file : files) {
       if (file.isDirectory()) {
-        boolean skipRestOfThisDir = processFlalDirectory(file);
+        boolean skipRestOfThisDir = processFlalDirectory(
+            file, newOutputFilenames);
         if (skipRestOfThisDir) {
           break;
         }
@@ -244,31 +293,34 @@ public class flal {
           // audio group
           logger.log("Detected group, genre: \"" + genre + "\", concat: \""
               + concat + "\".");
-          boolean parentDirBelongsToGroup = processAudioGroup(dir);
+          boolean parentDirBelongsToGroup
+            = processAudioGroup(dir, newOutputFilenames);
           return parentDirBelongsToGroup;
         }
         else {
           // single file
-          String outputFilename
-            = outputDir
-            + "/"
-            + file.getParentFile().getAbsolutePath().substring(
+          String relativeOutputFilename
+            = file.getParentFile().getAbsolutePath().substring(
                 rootDir.length()+1)
             + "/"
             + file.getName().substring(0,
                 file.getName().length()
                 - Constants.FLAC_SUFFIX.length()) + outputSuffix;
+          newOutputFilenames.add(relativeOutputFilename);
+          String outputFilename
+            = outputDir + "/" + relativeOutputFilename;
           String[] genresEncoderFlags
             = encoderFlags.containsKey(genre)
             ? encoderFlags.get(genre)
             : encoderFlags.get("music");
+          File outputFile = new File(outputFilename);
           EncodingJob job = new EncodingJob(
               Map.ofEntries(
                 Map.entry("logger", logger),
                 Map.entry("jobName", getNextEncodingJobName()),
                 Map.entry("rootDir", rootDir),
                 Map.entry("sourceFiles", Arrays.asList(file)),
-                Map.entry("outputFile", new File(outputFilename)),
+                Map.entry("outputFile", outputFile),
                 Map.entry("encoderName", aacEncoder),
                 Map.entry("debugFlag", debugFlag),
                 Map.entry("overwriteExisting", overwriteExisting),
@@ -291,7 +343,10 @@ public class flal {
    * @returns Whether the supplied dir's parent directory belongs to the
    *  group, which is the case when the group consists of multiple directories.
    */
-  public static boolean processAudioGroup(File dir) throws Exception {
+  public static boolean processAudioGroup(
+      File dir,
+      List<String> newOutputFilenames
+      ) throws Exception {
     String groupType;
     int myDiscTotal;
     String myConcat;
@@ -335,7 +390,9 @@ public class flal {
       }
     }
 
-    String outputFilename = outputDir + "/" + relativeGroupRoot + outputSuffix;
+    String relativeOutputFilename = relativeGroupRoot + outputSuffix;
+    newOutputFilenames.add(relativeOutputFilename);
+    String outputFilename = outputDir + "/" + relativeOutputFilename;
     File outputFile = new File(outputFilename);
 
     String[] genresEncoderFlags
